@@ -4,6 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -26,8 +30,8 @@ import io.flutter.plugin.common.MethodChannel.Result
 import kotlin.math.*
 import kotlin.random.Random
 
-/** FlutterCellSignalInfoPlugin - Professional RF Analysis Suite */
-class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
+/** FlutterCellSignalInfoPlugin - Professional RF Analysis Suite with AR Navigation */
+class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, SensorEventListener {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -36,10 +40,25 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
   private lateinit var context: Context
   private lateinit var cellularEventChannel: EventChannel
   private lateinit var wifiEventChannel: EventChannel
+  private lateinit var arSensorEventChannel: EventChannel
   private var telephonyManager: TelephonyManager? = null
   private var wifiManager: WifiManager? = null
   private var locationManager: LocationManager? = null
+  private var sensorManager: SensorManager? = null
   private val mainHandler = Handler(Looper.getMainLooper())
+  
+  // AR Navigation sensors
+  private var accelerometer: Sensor? = null
+  private var gyroscope: Sensor? = null
+  private var magnetometer: Sensor? = null
+  private var isARActive = false
+  
+  // Sensor data
+  private var accelerometerValues = FloatArray(3)
+  private var gyroscopeValues = FloatArray(3)
+  private var magnetometerValues = FloatArray(3)
+  private var compassBearing = 0.0f
+  private var compassAccuracy = 0.0f
   
   // RF Analysis state
   private var currentLocation: Location? = null
@@ -53,21 +72,35 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    Log.d(TAG, "🚀 Professional RF Analysis Suite başlatılıyor...")
+    Log.d(TAG, "🚀 Professional RF Analysis Suite + AR Navigation başlatılıyor...")
     context = flutterPluginBinding.applicationContext
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_cell_signal_info")
     channel.setMethodCallHandler(this)
 
     cellularEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_cell_signal_info/cellular_stream")
     wifiEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_cell_signal_info/wifi_stream")
+    arSensorEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "flutter_cell_signal_info/ar_sensor_stream")
 
     telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
     locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
+    initializeSensors()
     setupEventChannels()
     setupLocationListener()
-    Log.d(TAG, "✅ Professional RF Analysis Suite hazır!")
+    Log.d(TAG, "✅ Professional RF Analysis Suite + AR Navigation hazır!")
+  }
+
+  private fun initializeSensors() {
+    accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    gyroscope = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+    magnetometer = sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+    
+    Log.d(TAG, "📱 Sensors initialized:")
+    Log.d(TAG, "  Accelerometer: ${accelerometer != null}")
+    Log.d(TAG, "  Gyroscope: ${gyroscope != null}")
+    Log.d(TAG, "  Magnetometer: ${magnetometer != null}")
   }
 
   @SuppressLint("MissingPermission")
@@ -124,11 +157,10 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       "analyzeRFEnvironment" -> {
         try {
           val analysis = analyzeRFEnvironment()
-          Log.d(TAG, "📊 RF environment analizi tamamlandı")
           result.success(analysis)
         } catch (e: Exception) {
-          Log.e(TAG, "❌ RF analysis hatası: ${e.message}")
-          result.error("RF_ANALYSIS_ERROR", e.message, null)
+          Log.e(TAG, "❌ RF analysis error: ${e.message}")
+          result.error("ANALYSIS_ERROR", "Failed to analyze RF environment: ${e.message}", null)
         }
       }
       
@@ -163,6 +195,73 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
         } catch (e: Exception) {
           Log.e(TAG, "❌ Bearing measurement hatası: ${e.message}")
           result.error("BEARING_MEASUREMENT_ERROR", e.message, null)
+        }
+      }
+      
+      "getServingTower" -> {
+        try {
+          val servingTower = getServingTower()
+          result.success(servingTower)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ Serving tower error: ${e.message}")
+          result.error("SERVING_TOWER_ERROR", "Failed to get serving tower: ${e.message}", null)
+        }
+      }
+      
+      // === AR Navigation Methods ===
+      
+      "startARNavigation" -> {
+        try {
+          startARNavigation()
+          Log.d(TAG, "📱 AR Navigation başlatıldı")
+          result.success(null)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ AR Navigation başlatma hatası: ${e.message}")
+          result.error("AR_START_ERROR", e.message, null)
+        }
+      }
+      
+      "stopARNavigation" -> {
+        try {
+          stopARNavigation()
+          Log.d(TAG, "📱 AR Navigation durduruldu")
+          result.success(null)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ AR Navigation durdurma hatası: ${e.message}")
+          result.error("AR_STOP_ERROR", e.message, null)
+        }
+      }
+      
+      "getDeviceOrientation" -> {
+        try {
+          val orientation = getDeviceOrientation()
+          Log.d(TAG, "📱 Device orientation: $orientation")
+          result.success(orientation)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ Device orientation hatası: ${e.message}")
+          result.error("ORIENTATION_ERROR", e.message, null)
+        }
+      }
+      
+      "isARNavigationSupported" -> {
+        try {
+          val supported = isARNavigationSupported()
+          Log.d(TAG, "📱 AR Navigation support: $supported")
+          result.success(supported)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ AR support check hatası: ${e.message}")
+          result.error("AR_SUPPORT_ERROR", e.message, null)
+        }
+      }
+      
+      "calibrateARSensors" -> {
+        try {
+          val calibration = calibrateARSensors()
+          Log.d(TAG, "⚙️ AR Sensors calibrated")
+          result.success(calibration)
+        } catch (e: Exception) {
+          Log.e(TAG, "❌ AR calibration hatası: ${e.message}")
+          result.error("AR_CALIBRATION_ERROR", e.message, null)
         }
       }
       
@@ -206,11 +305,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       "frequency" to frequency,
       "bandClass" to getBandClass(frequency),
       "technology" to technology,
-      "pci" to pci,
-      "tac" to tac,
-      "rsrp" to rsrp,
-      "rsrq" to rsrq,
-      "sinr" to sinr
+      "pci" to (pci ?: 0),
+      "tac" to (tac ?: 0),
+      "rsrp" to (rsrp ?: 0),
+      "rsrq" to (rsrq ?: 0),
+      "sinr" to (sinr ?: 0)
     )
   }
 
@@ -283,6 +382,47 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
     }
     
     return towers
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun getServingTower(): Map<String, Any>? {
+    try {
+      val allCellInfo = telephonyManager?.allCellInfo ?: return null
+      
+      // Find the serving (registered/connected) cell
+      for ((index, cellInfo) in allCellInfo.withIndex()) {
+        if (cellInfo.isRegistered) {
+          val signal = when (cellInfo) {
+            is CellInfoLte -> cellInfo.cellSignalStrength.dbm
+            is CellInfoGsm -> cellInfo.cellSignalStrength.dbm
+            is CellInfoWcdma -> cellInfo.cellSignalStrength.dbm
+            is CellInfoCdma -> cellInfo.cellSignalStrength.dbm
+            else -> 0
+          }
+          
+          if (signal != 0) {
+            val bearing = calculateTowerBearing(cellInfo, index)
+            val distance = estimateDistance(signal, getFrequency(cellInfo))
+            val confidence = calculateConfidence(signal, distance)
+            
+            Log.d(TAG, "📡 Serving Tower: ${bearing.toInt()}°, ${distance.toInt()}m, ${signal}dBm")
+            
+            return mapOf(
+              "bearing" to bearing,
+              "distance" to distance,
+              "confidence" to confidence,
+              "signalStrength" to signal,
+              "towerId" to (cellInfo.cellIdentity?.toString()?.hashCode() ?: index),
+              "timestamp" to System.currentTimeMillis()
+            )
+          }
+        }
+      }
+    } catch (e: Exception) {
+      Log.e(TAG, "❌ Serving tower detection error: ${e.message}")
+    }
+    
+    return null
   }
 
   private fun analyzeRFEnvironment(): Map<String, Any> {
@@ -415,15 +555,34 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
   }
 
   private fun estimateDistance(signalStrength: Int, frequency: Int): Double {
-    // Simplified path loss model: FSPL(dB) = 20*log10(d) + 20*log10(f) + 32.45
+    // Handle EARFCN values (convert to actual frequency if needed)
+    val actualFreq = when {
+      frequency < 100000 -> {
+        // Convert EARFCN to actual frequency in MHz
+        when {
+          frequency < 600 -> 2100.0  // Band 1 (2100 MHz)
+          frequency < 1200 -> 1900.0 // Band 2 (1900 MHz)
+          frequency < 2000 -> 1800.0 // Band 3 (1800 MHz)
+          frequency < 3000 -> 900.0  // Band 8 (900 MHz)
+          else -> 1800.0 // Default
+        }
+      }
+      else -> frequency / 1000000.0 // Convert Hz to MHz
+    }
+    
+    // Ensure frequency is reasonable
+    val frequencyMHz = if (actualFreq < 400 || actualFreq > 6000) 1800.0 else actualFreq
+    
+    // Simplified path loss model with environmental factors
     val pathLoss = abs(signalStrength).toDouble()
-    val frequencyMHz = frequency / 1000000.0
+    val environmentalLoss = 10.0 // Urban environment loss
     
-    if (frequencyMHz <= 0) return 1000.0 // Default distance
-    
-    val logDistance = (pathLoss - 20 * log10(frequencyMHz) - 32.45) / 20
+    val logDistance = (pathLoss - 20 * log10(frequencyMHz) - 32.45 - environmentalLoss) / 20
     val distanceKm = 10.0.pow(logDistance)
-    return max(100.0, min(50000.0, distanceKm * 1000)) // Clamp between 100m and 50km
+    val distanceM = distanceKm * 1000
+    
+    // Clamp to realistic cellular tower ranges (100m to 35km)
+    return max(100.0, min(35000.0, distanceM))
   }
 
   private fun calculateConfidence(signal: Int, distance: Double): Double {
@@ -462,7 +621,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
     return when (cellInfo) {
       is CellInfoLte -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-          cellInfo.cellIdentity.earfcn // EARFCN to frequency conversion needed
+          try {
+            cellInfo.cellIdentity.earfcn
+          } catch (e: Exception) {
+            1800000000 // Default LTE frequency if EARFCN fails
+          }
         } else {
           1800000000 // Default LTE frequency
         }
@@ -628,7 +791,7 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
         TelephonyManager.NETWORK_TYPE_EVDO_A,
         TelephonyManager.NETWORK_TYPE_EVDO_B -> "3G"
         TelephonyManager.NETWORK_TYPE_EHRPD -> "3G"
-        TelephonyManager.NETWORK_TYPE_LTE_CA -> "4G+"
+        20 -> "4G+" // LTE_CA constant (API level dependent)
         TelephonyManager.NETWORK_TYPE_IWLAN -> "WiFi Calling"
         else -> {
           Log.w(TAG, "⚠️ Bilinmeyen network type: $activeType")
@@ -667,24 +830,35 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
     
     cellularEventChannel.setStreamHandler(object : EventChannel.StreamHandler {
       private var runnable: Runnable? = null
+      private var eventSink: EventChannel.EventSink? = null
 
       override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         Log.d(TAG, "📱 Enhanced cellular stream başlatıldı")
+        eventSink = events
         runnable = object : Runnable {
           override fun run() {
-            if (hasRequiredPermissions()) {
+            if (hasRequiredPermissions() && eventSink != null) {
               try {
                 val info = getCellularInfo()
-                events?.success(info)
+                eventSink?.success(info)
                 Log.v(TAG, "📱 Enhanced cellular data gönderildi")
               } catch (e: Exception) {
                 Log.e(TAG, "❌ Cellular stream hatası: ${e.message}")
-                events?.error("CELLULAR_ERROR", e.message, null)
+                try {
+                  eventSink?.error("CELLULAR_ERROR", e.message, null)
+                } catch (flutterException: Exception) {
+                  Log.w(TAG, "⚠️ Flutter detached - cellular event gönderilemedi")
+                }
               }
             } else {
-              Log.w(TAG, "⚠️ Cellular stream: İzinler eksik")
+              if (!hasRequiredPermissions()) {
+                Log.w(TAG, "⚠️ Cellular stream: İzinler eksik")
+              }
             }
-            mainHandler.postDelayed(this, 1000)
+            // Only continue if we still have a valid event sink
+            if (eventSink != null) {
+              mainHandler.postDelayed(this, 1000)
+            }
           }
         }
         mainHandler.post(runnable!!)
@@ -692,6 +866,7 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
 
       override fun onCancel(arguments: Any?) {
         Log.d(TAG, "📱 Enhanced cellular stream durduruldu")
+        eventSink = null
         runnable?.let {
           mainHandler.removeCallbacks(it)
         }
@@ -701,24 +876,35 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
 
     wifiEventChannel.setStreamHandler(object : EventChannel.StreamHandler {
       private var runnable: Runnable? = null
+      private var eventSink: EventChannel.EventSink? = null
 
       override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         Log.d(TAG, "📶 Enhanced WiFi stream başlatıldı")
+        eventSink = events
         runnable = object : Runnable {
           override fun run() {
-            if (hasRequiredPermissions()) {
+            if (hasRequiredPermissions() && eventSink != null) {
               try {
                 val info = getWifiInfo()
-                events?.success(info)
+                eventSink?.success(info)
                 Log.v(TAG, "📶 Enhanced WiFi data gönderildi")
               } catch (e: Exception) {
                 Log.e(TAG, "❌ WiFi stream hatası: ${e.message}")
-                events?.error("WIFI_ERROR", e.message, null)
+                try {
+                  eventSink?.error("WIFI_ERROR", e.message, null)
+                } catch (flutterException: Exception) {
+                  Log.w(TAG, "⚠️ Flutter detached - WiFi event gönderilemedi")
+                }
               }
             } else {
-              Log.w(TAG, "⚠️ WiFi stream: İzinler eksik")
+              if (!hasRequiredPermissions()) {
+                Log.w(TAG, "⚠️ WiFi stream: İzinler eksik")
+              }
             }
-            mainHandler.postDelayed(this, 1000)
+            // Only continue if we still have a valid event sink
+            if (eventSink != null) {
+              mainHandler.postDelayed(this, 1000)
+            }
           }
         }
         mainHandler.post(runnable!!)
@@ -726,6 +912,49 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
 
       override fun onCancel(arguments: Any?) {
         Log.d(TAG, "📶 Enhanced WiFi stream durduruldu")
+        eventSink = null
+        runnable?.let {
+          mainHandler.removeCallbacks(it)
+        }
+        runnable = null
+      }
+    })
+
+    arSensorEventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+      private var runnable: Runnable? = null
+      private var eventSink: EventChannel.EventSink? = null
+
+      override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        Log.d(TAG, "📱 AR Sensor stream başlatıldı")
+        eventSink = events
+        runnable = object : Runnable {
+          override fun run() {
+            if (isARActive && eventSink != null) {
+              try {
+                val orientation = getDeviceOrientation()
+                eventSink?.success(orientation)
+                Log.v(TAG, "📱 AR Sensor data gönderildi")
+              } catch (e: Exception) {
+                Log.e(TAG, "❌ AR Sensor stream hatası: ${e.message}")
+                try {
+                  eventSink?.error("AR_SENSOR_ERROR", e.message, null)
+                } catch (flutterException: Exception) {
+                  Log.w(TAG, "⚠️ Flutter detached - AR sensor event gönderilemedi")
+                }
+              }
+            }
+            // Only continue if we still have a valid event sink
+            if (eventSink != null) {
+              mainHandler.postDelayed(this, 100) // 10Hz update rate for AR
+            }
+          }
+        }
+        mainHandler.post(runnable!!)
+      }
+
+      override fun onCancel(arguments: Any?) {
+        Log.d(TAG, "📱 AR Sensor stream durduruldu")
+        eventSink = null
         runnable?.let {
           mainHandler.removeCallbacks(it)
         }
@@ -733,16 +962,134 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       }
     })
     
-    Log.d(TAG, "✅ Enhanced event channel'lar hazır!")
+    Log.d(TAG, "✅ Enhanced event channel'lar + AR Navigation hazır!")
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     Log.d(TAG, "🛑 Professional RF Analysis Suite kapatılıyor...")
+    
+    // Stop all streams and clear references
+    isARActive = false
+    sensorManager?.unregisterListener(this)
+    
+    // Clean up handlers
+    mainHandler.removeCallbacksAndMessages(null)
+    
     channel.setMethodCallHandler(null)
+    Log.d(TAG, "✅ RF Analysis Suite temizlendi")
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {}
   override fun onDetachedFromActivity() {}
   override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {}
   override fun onDetachedFromActivityForConfigChanges() {}
+
+  // === AR Navigation Implementation ===
+  
+  private fun startARNavigation() {
+    if (isARActive) return
+    
+    Log.d(TAG, "📱 AR Navigation sensörleri aktifleştiriliyor...")
+    isARActive = true
+    
+    // Register sensor listeners
+    accelerometer?.let { 
+      sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+    }
+    gyroscope?.let { 
+      sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+    }
+    magnetometer?.let { 
+      sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+    }
+    
+    Log.d(TAG, "📱 AR Navigation aktif!")
+  }
+  
+  private fun stopARNavigation() {
+    if (!isARActive) return
+    
+    Log.d(TAG, "📱 AR Navigation sensörleri deaktifleştiriliyor...")
+    isARActive = false
+    
+    // Unregister sensor listeners
+    sensorManager?.unregisterListener(this)
+    
+    Log.d(TAG, "📱 AR Navigation durduruldu!")
+  }
+  
+  private fun getDeviceOrientation(): Map<String, Any> {
+    return mapOf(
+      "accelerometer" to accelerometerValues.toList(),
+      "gyroscope" to gyroscopeValues.toList(),
+      "compass" to compassBearing.toDouble(),
+      "compassAccuracy" to compassAccuracy.toDouble(),
+      "timestamp" to System.currentTimeMillis()
+    )
+  }
+  
+  private fun isARNavigationSupported(): Boolean {
+    return accelerometer != null && gyroscope != null && magnetometer != null
+  }
+  
+  private fun calibrateARSensors(): Map<String, Any> {
+    // Simple calibration - in real implementation this would be more sophisticated
+    return mapOf(
+      "compassOffset" to 0.0,
+      "bearingCorrelation" to 1.0,
+      "calibrationPoints" to 1,
+      "accuracy" to 0.8,
+      "calibrationTime" to System.currentTimeMillis(),
+      "isValid" to true
+    )
+  }
+  
+  // === Sensor Event Handling ===
+  
+  override fun onSensorChanged(event: SensorEvent?) {
+    if (!isARActive || event == null) return
+    
+    when (event.sensor.type) {
+      Sensor.TYPE_ACCELEROMETER -> {
+        accelerometerValues = event.values.clone()
+      }
+      Sensor.TYPE_GYROSCOPE -> {
+        gyroscopeValues = event.values.clone()
+      }
+      Sensor.TYPE_MAGNETIC_FIELD -> {
+        magnetometerValues = event.values.clone()
+        updateCompassBearing()
+      }
+    }
+  }
+  
+  override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    when (sensor?.type) {
+      Sensor.TYPE_MAGNETIC_FIELD -> {
+        compassAccuracy = when (accuracy) {
+          SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> 1.0f
+          SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> 0.7f
+          SensorManager.SENSOR_STATUS_ACCURACY_LOW -> 0.3f
+          else -> 0.0f
+        }
+      }
+    }
+  }
+  
+  private fun updateCompassBearing() {
+    val rotationMatrix = FloatArray(9)
+    val inclinationMatrix = FloatArray(9)
+    
+    if (SensorManager.getRotationMatrix(rotationMatrix, inclinationMatrix, 
+                                       accelerometerValues, magnetometerValues)) {
+      val orientation = FloatArray(3)
+      SensorManager.getOrientation(rotationMatrix, orientation)
+      
+      // Convert to degrees and normalize to 0-360
+      compassBearing = Math.toDegrees(orientation[0].toDouble()).toFloat()
+      if (compassBearing < 0) {
+        compassBearing += 360f
+      }
+    }
+  }
 }

@@ -1,5 +1,5 @@
 name: flutter_cell_signal_info_example
-description: "Demonstrates how to use the flutter_cell_signal_info plugin."
+description: "Demonstrates how to use the flutter_cell_signal_info plugin with AR Tower Navigation."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -26,6 +26,10 @@ dependencies:
     path: ../
 
   permission_handler: ^11.3.1
+  
+  # AR Navigation dependencies
+  camera: ^0.10.5+9
+  sensors_plus: ^4.0.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

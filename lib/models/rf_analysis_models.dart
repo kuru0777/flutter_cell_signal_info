@@ -305,20 +305,51 @@ class RFMath {
   /// Estimate distance from signal strength (simplified path loss model)
   static double estimateDistanceFromSignal(
       int signalStrength, double frequency) {
-    // Simplified free space path loss model
-    // FSPL(dB) = 20*log10(d) + 20*log10(f) + 32.45
-    // Where d is distance in km, f is frequency in MHz
+    // Handle EARFCN values (convert to actual frequency if needed)
+    double actualFreq = frequency;
 
-    final double pathLoss =
-        signalStrength.abs().toDouble(); // Assuming signal strength is in dBm
-    final double frequencyMHz = frequency / 1000000; // Convert Hz to MHz
+    // If frequency looks like EARFCN (typically < 100000), convert to MHz
+    if (frequency < 100000) {
+      // Common LTE bands conversion from EARFCN
+      if (frequency < 600) {
+        actualFreq = 2100.0; // Band 1 (2100 MHz)
+      } else if (frequency < 1200) {
+        actualFreq = 1900.0; // Band 2 (1900 MHz)
+      } else if (frequency < 2000) {
+        actualFreq = 1800.0; // Band 3 (1800 MHz)
+      } else if (frequency < 3000) {
+        actualFreq = 900.0; // Band 8 (900 MHz)
+      } else {
+        actualFreq = 1800.0; // Default to 1800 MHz
+      }
+    } else {
+      // Convert Hz to MHz
+      actualFreq = frequency / 1000000.0;
+    }
 
-    // Solve for distance: d = 10^((FSPL - 20*log10(f) - 32.45) / 20)
-    final double logDistance =
-        (pathLoss - 20 * math.log(frequencyMHz) / math.ln10 - 32.45) / 20;
+    // Ensure frequency is reasonable
+    if (actualFreq < 400 || actualFreq > 6000) {
+      actualFreq = 1800.0; // Default to 1800 MHz if unreasonable
+    }
+
+    // Simplified free space path loss model with environmental factors
+    // FSPL(dB) = 20*log10(d) + 20*log10(f) + 32.45 + environmental_loss
+    final double pathLoss = signalStrength.abs().toDouble();
+    final double environmentalLoss = 10.0; // Urban environment loss
+
+    // Solve for distance: d = 10^((FSPL - 20*log10(f) - 32.45 - env_loss) / 20)
+    final double logDistance = (pathLoss -
+            20 * math.log(actualFreq) / math.ln10 -
+            32.45 -
+            environmentalLoss) /
+        20;
     final double distanceKm = math.pow(10, logDistance).toDouble();
 
-    return distanceKm * 1000; // Convert to meters
+    // Convert to meters and apply realistic bounds
+    final double distanceM = distanceKm * 1000;
+
+    // Cellular towers typically serve 100m to 35km
+    return distanceM.clamp(100.0, 35000.0);
   }
 
   static double _toRadians(double degrees) => degrees * math.pi / 180;
