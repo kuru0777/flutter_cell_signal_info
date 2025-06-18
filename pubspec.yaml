@@ -1,9 +1,9 @@
 name: flutter_cell_signal_info
 description: A Flutter package for getting cellular and WiFi signal information including signal strength, network type, operator name, and cell tower information.
 version: 0.0.1
-homepage: https://github.com/YOUR_GITHUB_USERNAME/flutter_cell_signal_info
-repository: https://github.com/YOUR_GITHUB_USERNAME/flutter_cell_signal_info
-issue_tracker: https://github.com/YOUR_GITHUB_USERNAME/flutter_cell_signal_info/issues
+homepage: https://github.com/kuru0777/flutter_cell_signal_info
+repository: https://github.com/kuru0777/flutter_cell_signal_info
+issue_tracker: https://github.com/kuru0777/flutter_cell_signal_info/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

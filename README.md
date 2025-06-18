@@ -214,7 +214,7 @@ Check out the example app in the `example/` directory for a complete implementat
 
 ## Issues and Contributions
 
-Please file feature requests and bugs at the [issue tracker](https://github.com/YOUR_GITHUB_USERNAME/flutter_cell_signal_info/issues).
+Please file feature requests and bugs at the [issue tracker](https://github.com/kuru0777/flutter_cell_signal_info/issues).
 
 ## License
 
