@@ -180,6 +180,17 @@ class FlutterCellSignalInfo {
   // === Professional RF Analysis API ===
 
   /// Get detailed tower bearing information
+  /// > **Experimental - the `bearing` value is simulated.**
+  /// >
+  /// > Android does not expose the azimuth of a cell tower to apps. Until this
+  /// > package resolves cell identity against a tower database (or triangulates
+  /// > across positions), `bearing` is generated from the cell's index in the
+  /// > scan result and is **not a measurement** - do not use it to physically
+  /// > aim an antenna.
+  /// >
+  /// > Everything else in the returned object is real: cell identity, signal
+  /// > strength read from `CellSignalStrength.dbm`, and the distance estimate
+  /// > produced by the path-loss model.
   static Future<List<TowerBearing>> getNearbyTowers() async {
     try {
       final result = await _channel.invokeMethod('getNearbyTowers');
@@ -194,6 +205,12 @@ class FlutterCellSignalInfo {
   }
 
   /// Perform comprehensive RF environment analysis
+  /// > **Experimental - partially simulated.**
+  /// >
+  /// > `signalToNoiseRatio`, `interferenceLevel` and the directional signal
+  /// > pattern come from a synthetic model, not from radio measurements: the
+  /// > noise floor and the per-bearing variation are generated values. Only the
+  /// > raw signal strength they are derived from is real.
   static Future<RFEnvironmentAnalysis> analyzeRFEnvironment() async {
     try {
       final result = await _channel.invokeMethod('analyzeRFEnvironment');
@@ -241,6 +258,12 @@ class FlutterCellSignalInfo {
   }
 
   /// Generate network optimization recommendations
+  /// > **Experimental - partially simulated.**
+  /// >
+  /// > `signalToNoiseRatio`, `interferenceLevel` and the directional signal
+  /// > pattern come from a synthetic model, not from radio measurements: the
+  /// > noise floor and the per-bearing variation are generated values. Only the
+  /// > raw signal strength they are derived from is real.
   static Future<NetworkOptimizationReport> getOptimizationReport() async {
     try {
       final analysis = await analyzeRFEnvironment();
@@ -251,6 +274,11 @@ class FlutterCellSignalInfo {
   }
 
   /// Start tower direction hunting mode (continuous bearing analysis)
+  /// > **Experimental - simulated.**
+  /// >
+  /// > Directional signal strength is modelled, not measured. Android exposes no
+  /// > per-bearing signal API, so this returns a value derived from the current
+  /// > signal and the requested bearing.
   static Future<void> startTowerHunting() async {
     try {
       await _channel.invokeMethod('startTowerHunting');
@@ -269,6 +297,17 @@ class FlutterCellSignalInfo {
   }
 
   /// Calculate bearing to strongest tower from current location
+  /// > **Experimental - the `bearing` value is simulated.**
+  /// >
+  /// > Android does not expose the azimuth of a cell tower to apps. Until this
+  /// > package resolves cell identity against a tower database (or triangulates
+  /// > across positions), `bearing` is generated from the cell's index in the
+  /// > scan result and is **not a measurement** - do not use it to physically
+  /// > aim an antenna.
+  /// >
+  /// > Everything else in the returned object is real: cell identity, signal
+  /// > strength read from `CellSignalStrength.dbm`, and the distance estimate
+  /// > produced by the path-loss model.
   static Future<double?> getStrongestTowerBearing() async {
     try {
       final towers = await getNearbyTowers();
@@ -285,6 +324,11 @@ class FlutterCellSignalInfo {
   }
 
   /// Measure signal in specific direction (requires device rotation)
+  /// > **Experimental - simulated.**
+  /// >
+  /// > Directional signal strength is modelled, not measured. Android exposes no
+  /// > per-bearing signal API, so this returns a value derived from the current
+  /// > signal and the requested bearing.
   static Future<int> measureSignalAtBearing(double bearing) async {
     try {
       final result = await _channel.invokeMethod('measureSignalAtBearing', {
@@ -443,6 +487,10 @@ class FlutterCellSignalInfo {
   }
 
   /// Calibrate compass and sensors
+  /// > **Experimental - not implemented.**
+  /// >
+  /// > Returns fixed placeholder values (zero compass offset, 0.8 accuracy)
+  /// > rather than performing a real calibration routine.
   static Future<ar.ARCalibration> calibrateARSensors() async {
     try {
       final result = await _channel.invokeMethod('calibrateARSensors');
@@ -475,6 +523,17 @@ class FlutterCellSignalInfo {
   }
 
   /// Get best tower for AR navigation (closest and strongest signal)
+  /// > **Experimental - the `bearing` value is simulated.**
+  /// >
+  /// > Android does not expose the azimuth of a cell tower to apps. Until this
+  /// > package resolves cell identity against a tower database (or triangulates
+  /// > across positions), `bearing` is generated from the cell's index in the
+  /// > scan result and is **not a measurement** - do not use it to physically
+  /// > aim an antenna.
+  /// >
+  /// > Everything else in the returned object is real: cell identity, signal
+  /// > strength read from `CellSignalStrength.dbm`, and the distance estimate
+  /// > produced by the path-loss model.
   static Future<TowerBearing?> getBestTowerForAR() async {
     try {
       final towers = await getNearbyTowers();
@@ -494,6 +553,17 @@ class FlutterCellSignalInfo {
   }
 
   /// Get serving (currently connected) tower for AR navigation
+  /// > **Experimental - the `bearing` value is simulated.**
+  /// >
+  /// > Android does not expose the azimuth of a cell tower to apps. Until this
+  /// > package resolves cell identity against a tower database (or triangulates
+  /// > across positions), `bearing` is generated from the cell's index in the
+  /// > scan result and is **not a measurement** - do not use it to physically
+  /// > aim an antenna.
+  /// >
+  /// > Everything else in the returned object is real: cell identity, signal
+  /// > strength read from `CellSignalStrength.dbm`, and the distance estimate
+  /// > produced by the path-loss model.
   static Future<TowerBearing?> getServingTowerForAR() async {
     try {
       final result = await _channel.invokeMethod('getServingTower');

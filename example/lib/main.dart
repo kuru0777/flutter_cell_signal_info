@@ -26,20 +26,20 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.indigo,
           brightness: Brightness.light,
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
-          titleTextStyle: const TextStyle(
+          titleTextStyle: TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
-          actionsIconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: Colors.white),
+          actionsIconTheme: IconThemeData(color: Colors.white),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 4,
           shadowColor: Colors.black26,
           shape: RoundedRectangleBorder(
@@ -332,7 +332,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                 Container(
                   width: 80,
                   height: 80,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [Colors.purple, Colors.indigo],
@@ -605,7 +605,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -615,10 +615,10 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'RF Signal Hunter',
                               style: TextStyle(
@@ -646,7 +646,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                   Container(
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TabBar(
@@ -662,7 +662,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white60,
                       indicator: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       indicatorSize: TabBarIndicatorSize.tab,
@@ -693,16 +693,16 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _isAnalyzing
-                    ? Colors.orange.withOpacity(0.9)
+                    ? Colors.orange.withValues(alpha: 0.9)
                     : _isHunting
-                        ? Colors.green.withOpacity(0.9)
+                        ? Colors.green.withValues(alpha: 0.9)
                         : _isARActive
-                            ? Colors.purple.withOpacity(0.9)
-                            : Colors.black.withOpacity(0.3),
+                            ? Colors.purple.withValues(alpha: 0.9)
+                            : Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -718,7 +718,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withOpacity(0.8),
+                          Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -738,7 +738,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -772,7 +772,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, -2),
                     ),
@@ -899,7 +899,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -944,7 +944,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -976,10 +976,10 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
                                 'Hücresel Ağ',
                                 style: TextStyle(
@@ -1098,7 +1098,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -1130,10 +1130,10 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
                                 'WiFi Ağı',
                                 style: TextStyle(
@@ -1241,9 +1241,9 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -1251,7 +1251,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
@@ -1359,7 +1359,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -1395,7 +1395,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -1449,7 +1449,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1530,7 +1530,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1551,7 +1551,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     gradient: LinearGradient(
                       colors: [
                         _getSignalColor(tower.signalStrength),
-                        _getSignalColor(tower.signalStrength).withOpacity(0.7),
+                        _getSignalColor(tower.signalStrength).withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -1716,7 +1716,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -2065,7 +2065,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [Colors.purple, Colors.indigo],
                     ),
                     boxShadow: [
@@ -2111,15 +2111,15 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.info_outline,
                         size: 24,
                         color: Colors.blue,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      SizedBox(height: 8),
+                      Text(
                         'Kameraya bakarak baz istasyonu kulesinin yönünü görün',
                         style: TextStyle(
                           fontSize: 13,
@@ -2191,7 +2191,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [Colors.purple, Colors.indigo],
                     ),
                     boxShadow: [
@@ -2207,14 +2207,14 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: _startARNavigation,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(
                               Icons.camera_alt,
                               color: Colors.white,
@@ -2313,7 +2313,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -2357,15 +2357,15 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: _towerDirection!.isOnTarget
-                            ? Colors.green.withOpacity(0.9)
-                            : Colors.black.withOpacity(0.7),
+                            ? Colors.green.withValues(alpha: 0.9)
+                            : Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
                         children: [
                           Text(
                             _towerDirection!.instruction,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -2444,7 +2444,7 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(

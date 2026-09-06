@@ -155,8 +155,12 @@ class TowerDirection {
     double difference = targetBearing - currentBearing;
 
     // Normalize to -180 to +180 range
-    while (difference > 180) difference -= 360;
-    while (difference < -180) difference += 360;
+    while (difference > 180) {
+      difference -= 360;
+    }
+    while (difference < -180) {
+      difference += 360;
+    }
 
     // Check if on target
     final bool isOnTarget = difference.abs() <= tolerance;

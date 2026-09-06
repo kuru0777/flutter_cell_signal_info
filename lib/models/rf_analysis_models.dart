@@ -335,7 +335,7 @@ class RFMath {
     // Simplified free space path loss model with environmental factors
     // FSPL(dB) = 20*log10(d) + 20*log10(f) + 32.45 + environmental_loss
     final double pathLoss = signalStrength.abs().toDouble();
-    final double environmentalLoss = 10.0; // Urban environment loss
+    const double environmentalLoss = 10.0; // Urban environment loss
 
     // Solve for distance: d = 10^((FSPL - 20*log10(f) - 32.45 - env_loss) / 20)
     final double logDistance = (pathLoss -
