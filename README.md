@@ -57,7 +57,9 @@ dependencies:
   flutter_cell_signal_info: ^0.1.0
 ```
 
-Requires `minSdkVersion 21`.
+Requires `minSdkVersion 21`. The package itself pulls in no third-party
+dependencies - only the Flutter SDK - so it will not conflict with the
+versions of `sensors_plus`, `permission_handler` or `camera` your app uses.
 
 ## Permissions
 
@@ -105,6 +107,27 @@ if (await FlutterCellSignalInfo.isARNavigationSupported()) {
 
 A full example app is in [`example/`](example) — it exercises every method and renders
 the sensor and signal data live.
+
+## Error handling
+
+Every method throws [`CellSignalException`] on failure, which implements
+`Exception`, so the idiomatic pattern works:
+
+```dart
+try {
+  final cell = await FlutterCellSignalInfo.getCellularInfo();
+} on CellSignalException catch (e) {
+  if (e.code == 'PERMISSION_DENIED') {
+    // ACCESS_FINE_LOCATION or READ_PHONE_STATE is missing
+  }
+  print(e.message);
+}
+```
+
+Methods that read telephony data return `PERMISSION_DENIED` when location or
+phone-state permission has not been granted, rather than failing with an opaque
+error. Sensor-only methods (`getDeviceOrientation`, `startARNavigation`,
+`isARNavigationSupported`) need no permission.
 
 ## API
 

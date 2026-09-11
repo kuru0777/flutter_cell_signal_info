@@ -6,6 +6,7 @@
 ///
 /// Author: Professional RF Analysis Suite
 /// License: MIT
+library;
 
 import 'dart:math' as math;
 

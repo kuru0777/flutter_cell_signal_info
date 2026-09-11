@@ -1,4 +1,4 @@
-package com.example.flutter_cell_signal_info
+package com.kuru0777.flutter_cell_signal_info
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -144,6 +144,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       // === Professional RF Analysis Methods ===
       
       "getNearbyTowers" -> {
+        if (!hasRequiredPermissions()) {
+          result.error("PERMISSION_DENIED", "Required permissions are not granted", null)
+          return
+        }
+
         try {
           val towers = getNearbyTowers()
           Log.d(TAG, "🗼 ${towers.size} tower bulundu")
@@ -155,6 +160,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       }
       
       "analyzeRFEnvironment" -> {
+        if (!hasRequiredPermissions()) {
+          result.error("PERMISSION_DENIED", "Required permissions are not granted", null)
+          return
+        }
+
         try {
           val analysis = analyzeRFEnvironment()
           result.success(analysis)
@@ -165,6 +175,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       }
       
       "startTowerHunting" -> {
+        if (!hasRequiredPermissions()) {
+          result.error("PERMISSION_DENIED", "Required permissions are not granted", null)
+          return
+        }
+
         try {
           startTowerHunting()
           Log.d(TAG, "🎯 Tower hunting başlatıldı")
@@ -187,6 +202,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       }
       
       "measureSignalAtBearing" -> {
+        if (!hasRequiredPermissions()) {
+          result.error("PERMISSION_DENIED", "Required permissions are not granted", null)
+          return
+        }
+
         try {
           val bearing = call.argument<Double>("bearing") ?: 0.0
           val signal = measureSignalAtBearing(bearing)
@@ -199,6 +219,11 @@ class FlutterCellSignalInfoPlugin: FlutterPlugin, MethodCallHandler, ActivityAwa
       }
       
       "getServingTower" -> {
+        if (!hasRequiredPermissions()) {
+          result.error("PERMISSION_DENIED", "Required permissions are not granted", null)
+          return
+        }
+
         try {
           val servingTower = getServingTower()
           result.success(servingTower)

@@ -1551,7 +1551,8 @@ class _RFAnalysisHomePageState extends State<RFAnalysisHomePage>
                     gradient: LinearGradient(
                       colors: [
                         _getSignalColor(tower.signalStrength),
-                        _getSignalColor(tower.signalStrength).withValues(alpha: 0.7),
+                        _getSignalColor(tower.signalStrength)
+                            .withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),

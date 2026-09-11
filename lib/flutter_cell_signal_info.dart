@@ -3,6 +3,28 @@ import 'package:flutter/services.dart';
 import 'models/rf_analysis_models.dart';
 import 'models/ar_navigation_models.dart' as ar;
 
+/// Thrown when a platform call fails or the Android side reports an error.
+///
+/// Previous versions threw raw [String]s, which meant `on Exception catch (e)`
+/// could not catch them. This type implements [Exception] so the idiomatic
+/// pattern works.
+class CellSignalException implements Exception {
+  /// Creates an exception with a human readable [message] and an optional
+  /// platform error [code] (for example `PERMISSION_DENIED`).
+  const CellSignalException(this.message, {this.code});
+
+  /// What went wrong.
+  final String message;
+
+  /// The platform error code, when the failure came from the Android side.
+  final String? code;
+
+  @override
+  String toString() => code == null
+      ? 'CellSignalException: $message'
+      : 'CellSignalException($code): $message';
+}
+
 class CellularInfo {
   final int signalStrength;
   final String networkType;
@@ -153,7 +175,8 @@ class FlutterCellSignalInfo {
       final Map<String, dynamic> data = Map<String, dynamic>.from(result);
       return CellularInfo.fromMap(data);
     } on PlatformException catch (e) {
-      throw 'Failed to get cellular info: ${e.message}';
+      throw CellSignalException('Failed to get cellular info: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -163,7 +186,8 @@ class FlutterCellSignalInfo {
       final Map<String, dynamic> data = Map<String, dynamic>.from(result);
       return WifiInfo.fromMap(data);
     } on PlatformException catch (e) {
-      throw 'Failed to get WiFi info: ${e.message}';
+      throw CellSignalException('Failed to get WiFi info: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -200,7 +224,8 @@ class FlutterCellSignalInfo {
               TowerBearing.fromMap(Map<String, dynamic>.from(tower as Map)))
           .toList();
     } on PlatformException catch (e) {
-      throw 'Failed to get nearby towers: ${e.message}';
+      throw CellSignalException('Failed to get nearby towers: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -253,7 +278,9 @@ class FlutterCellSignalInfo {
         timestamp: DateTime.now(),
       );
     } on PlatformException catch (e) {
-      throw 'Failed to analyze RF environment: ${e.message}';
+      throw CellSignalException(
+          'Failed to analyze RF environment: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -269,7 +296,7 @@ class FlutterCellSignalInfo {
       final analysis = await analyzeRFEnvironment();
       return NetworkOptimizationReport.fromAnalysis(analysis);
     } catch (e) {
-      throw 'Failed to generate optimization report: $e';
+      throw CellSignalException('Failed to generate optimization report: $e');
     }
   }
 
@@ -283,7 +310,8 @@ class FlutterCellSignalInfo {
     try {
       await _channel.invokeMethod('startTowerHunting');
     } on PlatformException catch (e) {
-      throw 'Failed to start tower hunting: ${e.message}';
+      throw CellSignalException('Failed to start tower hunting: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -292,7 +320,8 @@ class FlutterCellSignalInfo {
     try {
       await _channel.invokeMethod('stopTowerHunting');
     } on PlatformException catch (e) {
-      throw 'Failed to stop tower hunting: ${e.message}';
+      throw CellSignalException('Failed to stop tower hunting: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -336,7 +365,9 @@ class FlutterCellSignalInfo {
       });
       return result as int;
     } on PlatformException catch (e) {
-      throw 'Failed to measure signal at bearing: ${e.message}';
+      throw CellSignalException(
+          'Failed to measure signal at bearing: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -390,7 +421,7 @@ class FlutterCellSignalInfo {
         },
       };
     } catch (e) {
-      throw 'Failed to export analysis data: $e';
+      throw CellSignalException('Failed to export analysis data: $e');
     }
   }
 
@@ -401,7 +432,8 @@ class FlutterCellSignalInfo {
     try {
       await _channel.invokeMethod('startARNavigation');
     } on PlatformException catch (e) {
-      throw 'Failed to start AR navigation: ${e.message}';
+      throw CellSignalException('Failed to start AR navigation: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -410,7 +442,8 @@ class FlutterCellSignalInfo {
     try {
       await _channel.invokeMethod('stopARNavigation');
     } on PlatformException catch (e) {
-      throw 'Failed to stop AR navigation: ${e.message}';
+      throw CellSignalException('Failed to stop AR navigation: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -428,7 +461,9 @@ class FlutterCellSignalInfo {
         compassAccuracy: (data['compassAccuracy'] ?? 0.0).toDouble(),
       );
     } on PlatformException catch (e) {
-      throw 'Failed to get device orientation: ${e.message}';
+      throw CellSignalException(
+          'Failed to get device orientation: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -450,7 +485,7 @@ class FlutterCellSignalInfo {
         towerId: towerId,
       );
     } catch (e) {
-      throw 'Failed to calculate tower direction: $e';
+      throw CellSignalException('Failed to calculate tower direction: $e');
     }
   }
 
@@ -508,7 +543,8 @@ class FlutterCellSignalInfo {
         isValid: data['isValid'] ?? false,
       );
     } on PlatformException catch (e) {
-      throw 'Failed to calibrate AR sensors: ${e.message}';
+      throw CellSignalException('Failed to calibrate AR sensors: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -518,7 +554,9 @@ class FlutterCellSignalInfo {
       final result = await _channel.invokeMethod('isARNavigationSupported');
       return result as bool;
     } on PlatformException catch (e) {
-      throw 'Failed to check AR navigation support: ${e.message}';
+      throw CellSignalException(
+          'Failed to check AR navigation support: ${e.message}',
+          code: e.code);
     }
   }
 
@@ -585,7 +623,7 @@ class FlutterCellSignalInfo {
       final targetTower = towers.where((t) => t.towerId == towerId).firstOrNull;
 
       if (targetTower == null) {
-        throw 'Tower with ID $towerId not found';
+        throw CellSignalException('Tower with ID $towerId not found');
       }
 
       await startARNavigation();
@@ -597,7 +635,7 @@ class FlutterCellSignalInfo {
         signalStrength: targetTower.signalStrength,
       );
     } catch (e) {
-      throw 'Failed to start AR navigation to tower: $e';
+      throw CellSignalException('Failed to start AR navigation to tower: $e');
     }
   }
 }

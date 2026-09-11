@@ -1,5 +1,5 @@
-group = "com.example.flutter_cell_signal_info"
-version = "1.0-SNAPSHOT"
+group = "com.kuru0777.flutter_cell_signal_info"
+version = "0.1.0"
 
 buildscript {
     ext.kotlin_version = "1.8.22"
@@ -25,7 +25,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "com.example.flutter_cell_signal_info"
+    namespace = "com.kuru0777.flutter_cell_signal_info"
 
     compileSdk = 35
 
